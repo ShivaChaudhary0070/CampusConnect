@@ -1,0 +1,918 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>CampusConnect – Smart Lost & Found</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{--ink:#4a2f2a;--bg:#fdf1e7;--paper:#fffaf5;--lost:#c95a50;--found:#d99a2b;--amber:#f0b45a;--mute:#8a6d63;--line:#ecd5c4;--sage:#8fae8b;--rose:#f8dccd}
+
+*{box-sizing:border-box}
+
+a{color:var(--amber)}
+
+input::placeholder,textarea::placeholder{color:var(--mute)}
+
+body{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+
+button,input,select,textarea{font:inherit;color:inherit}
+
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+header{background:#fff7ef;color:var(--ink);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+
+.bar{max-width:1100px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+.brand{font-weight:800;font-size:1.25rem;cursor:pointer;display:flex;align-items:center;gap:8px}
+
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--amber);display:inline-block;box-shadow:inset 0 0 0 4px #fff7ef,0 0 0 2px var(--amber)}
+
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+
+nav button{background:none;border:0;color:var(--mute);padding:6px 10px;border-radius:8px;cursor:pointer}
+
+nav button.on,nav button:hover{background:var(--rose);color:var(--ink)}
+
+.bell{position:relative;background:var(--rose);border:0;border-radius:8px;color:var(--ink);padding:6px 12px;cursor:pointer}
+
+.bell b{position:absolute;top:-6px;right:-6px;background:var(--lost);border-radius:99px;font-size:.7rem;padding:0 6px}
+
+#notes{position:absolute;right:16px;top:100%;width:min(340px,92vw);background:var(--paper);color:var(--ink);border-radius:12px;box-shadow:0 10px 30px #0004;padding:10px;display:none;max-height:60vh;overflow:auto}
+
+#notes.open{display:block}
+
+#notes p{margin:0;padding:8px;border-bottom:1px solid var(--line);font-size:.9rem;cursor:pointer}
+
+main{max-width:1100px;margin:auto;padding:22px 16px 60px}
+
+h1{font-size:clamp(2rem,6vw,3.6rem);line-height:1.05;margin:.2em 0;font-weight:800;letter-spacing:-.02em}
+
+h2{margin:0 0 12px;font-size:1.5rem}
+
+.sub{color:var(--mute);max-width:60ch}
+
+.btn{border:0;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff8f0}
+
+.btn.lost{background:var(--lost);color:#fff}.btn.found{background:var(--found);color:var(--ink)}.btn.ghost{background:none;border:2px solid var(--ink);color:var(--ink)}
+
+.btn.sm{padding:6px 12px;font-size:.9rem}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center;padding:20px 0 10px}
+
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+
+.demo{background:var(--paper);border-radius:16px;padding:18px;border:2px dashed var(--line)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:22px 0}
+
+.stat{background:var(--paper);border-radius:12px;padding:14px}
+
+.stat b{font-size:1.9rem;display:block}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+
+.step{background:var(--paper);border-radius:12px;padding:14px;border-left:6px solid var(--amber)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+
+.tag{background:var(--paper);border-radius:6px 22px 22px 6px;padding:16px 16px 14px 34px;position:relative;box-shadow:0 2px 0 var(--line);border-left:8px solid var(--c,var(--ink))}
+
+.tag::before{content:"";position:absolute;left:10px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 2px #0003}
+
+.tag.lost{--c:var(--lost)}.tag.found{--c:var(--found)}
+
+.tag img{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+
+.tag h3{margin:0 0 4px;font-size:1.1rem}
+
+.meta{color:var(--mute);font-size:.88rem}
+
+.pill{display:inline-block;border-radius:99px;padding:1px 10px;font-size:.8rem;font-weight:600;color:#1a110d;background:var(--c,var(--amber));margin-right:4px}
+
+.pill.lost{background:var(--lost);color:#fff}.pill.found{background:var(--found)}.pill.st{background:#ecd5c4;color:var(--ink)}.pill.ok{background:#6b8f3a;color:#fff}
+
+form,.panel{background:var(--paper);border-radius:14px;padding:18px}
+
+label{display:block;font-weight:600;margin:12px 0 4px}
+
+input,select,textarea{width:100%;padding:9px 11px;border:2px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+
+.seg{display:flex;gap:8px}
+
+.seg button{flex:1;padding:12px;border-radius:10px;border:2px solid var(--line);background:#fff;font-weight:700;cursor:pointer}
+
+.seg button.on.lost{background:var(--lost);color:#fff;border-color:var(--lost)}
+
+.seg button.on.found{background:var(--found);color:#fff;border-color:var(--found)}
+
+.hint{font-size:.85rem;color:var(--mute);margin-top:3px}
+
+.match{display:grid;grid-template-columns:90px 1fr auto;gap:16px;align-items:center;background:var(--paper);border-radius:14px;padding:14px;margin-bottom:12px}
+
+@media(max-width:640px){.match{grid-template-columns:70px 1fr}.match .btn{grid-column:1/-1}}
+
+.ring{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--col) calc(var(--p)*1%),var(--line) 0)}
+
+.ring span{width:64px;height:64px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-weight:800}
+
+.bars div{display:grid;grid-template-columns:100px 1fr 40px;gap:8px;align-items:center;font-size:.85rem}
+
+.bars i{display:block;height:8px;border-radius:9px;background:var(--line);position:relative;overflow:hidden}
+
+.bars i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--found)}
+
+.trk{display:flex;gap:0;margin:10px 0 4px;flex-wrap:wrap}
+
+.trk span{flex:1;min-width:110px;text-align:center;padding:6px 4px;font-size:.82rem;font-weight:600;background:var(--line);color:var(--mute);clip-path:polygon(0 0,92% 0,100% 50%,92% 100%,0 100%,8% 50%)}
+
+.trk span.done{background:var(--found);color:#1a110d}
+
+.map{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--paper);padding:14px;border-radius:14px}
+
+.zone{border:2px solid var(--line);border-radius:12px;padding:18px 8px;background:#fff3e8;cursor:pointer;text-align:center;min-height:100px}
+
+.zone:hover{border-color:var(--amber)}
+
+.zone b{display:block}
+
+.bar-row{display:grid;grid-template-columns:120px 1fr 30px;gap:8px;align-items:center;margin:6px 0}
+
+.bar-row i{height:14px;border-radius:7px;background:var(--amber);display:block;min-width:3px}
+
+dialog{background:var(--paper);color:var(--ink);border:0;border-radius:14px;padding:20px;width:min(460px,94vw)}
+
+dialog::backdrop{background:#0006}
+
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff8f0;padding:10px 18px;border-radius:10px;z-index:9;display:none}
+
+.empty{padding:26px;text-align:center;color:var(--mute);background:var(--paper);border-radius:12px}
+
+.secret{background:#fff0cf;border:1px dashed #d3a200;border-radius:8px;padding:8px;margin:6px 0;font-size:.9rem}
+
+@media(prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}}
+
+
+
+.hv{max-width:760px;margin:0 auto 64px;text-align:center}
+
+.hv h1{font-size:clamp(2.3rem,7vw,4.2rem)}
+
+.hv .sub{margin:12px auto 22px;font-size:1.1rem}
+
+.c{justify-content:center}
+
+.scene{max-width:900px;margin:0 auto 64px;border-radius:22px;overflow:hidden;box-shadow:0 8px 0 var(--line)}
+
+.scene svg{display:block;width:100%;height:auto}
+
+.tl{list-style:none;margin:24px auto 0;padding:0 0 0 34px;max-width:560px;text-align:left;border-left:3px dashed var(--line)}
+
+.tl li{position:relative;margin-bottom:28px;padding-left:10px}
+
+.tl li::before{content:attr(data-n);position:absolute;left:-53px;top:-2px;width:34px;height:34px;border-radius:50%;background:var(--amber);color:var(--ink);font-weight:800;display:grid;place-items:center}
+
+.tl b{font-size:1.15rem;display:block}
+
+.feat{display:flex;gap:16px;align-items:flex-start;text-align:left;background:var(--paper);border-radius:16px;padding:18px;margin-bottom:12px}
+
+.feat em{font-style:normal;font-size:1.6rem;width:48px;height:48px;border-radius:14px;background:var(--rose);display:grid;place-items:center;flex:none}
+
+.feat b{display:block;font-size:1.1rem}
+
+.demo.big{max-width:560px;margin:18px auto 0;text-align:left}
+
+.cta{max-width:900px;margin:0 auto;text-align:center;background:var(--ink);color:#fff8f0;border-radius:24px;padding:44px 20px}
+
+.cta h2{font-size:clamp(1.6rem,4vw,2.2rem)}
+
+.cta .btn.ghost{border-color:#fff8f0;color:#fff8f0}
+
+.anim .float{animation:bob 3s ease-in-out infinite}
+
+.anim .b2{animation-delay:.6s}.anim .b3{animation-delay:1.2s}
+
+.anim .route{animation:dash 1.5s linear infinite}
+
+.anim .ringp{transform-box:fill-box;transform-origin:center;animation:pulse 2s ease-out infinite}
+
+.anim .sun{transform-box:fill-box;transform-origin:center;animation:glow 4s ease-in-out infinite alternate}
+
+@keyframes bob{50%{transform:translateY(-8px)}}
+
+@keyframes dash{to{stroke-dashoffset:-26}}
+
+@keyframes pulse{from{transform:scale(1);opacity:.7}to{transform:scale(2.4);opacity:0}}
+
+@keyframes glow{to{transform:scale(1.15)}}
+
+@media(prefers-reduced-motion:reduce){.anim *{animation:none!important}.dot{display:none}}
+/* New text colour + box outlines for every page except Home */
+body:not(.home) main,body:not(.home) dialog{--ink:#3d2236;--mute:#7a5a68;--ol:#d4a28c}
+
+body:not(.home) :is(.panel,form,.tag,.match,.stat,.empty,.zone,.bar-row){border:2px solid var(--ol)}
+
+body:not(.home) .bar-row{border:0}
+
+body:not(.home) .tag{border-left:8px solid var(--c,var(--ink))}
+
+body:not(.home) :is(input,select,textarea){border-color:var(--ol)}
+
+body:not(.home) dialog{border:2px solid var(--ol)}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <div class="bar">
+
+    <div class="brand" onclick="go('home')"><i></i>CampusConnect</div>
+
+    <nav id="nav"></nav>
+
+    <button class="btn ghost sm" id="authBtn" type="button" onclick="openAuth()">Log in / Sign up</button>
+    <button class="bell" id="bell" aria-label="Notifications">Alerts <b id="cnt"></b></button>
+
+  </div>
+
+  <div id="notes"></div>
+
+</header>
+
+<main id="app"></main>
+
+<dialog id="dlg"></dialog>
+
+<div class="toast" id="toast"></div>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ---------- Supabase Auth setup ---------- */
+// Replace both placeholders with values from Supabase Project Settings > API.
+const SUPABASE_URL = "https://ppanehrgidtlzvqugaue.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_mI1QigsOD3MSXE5K3DlqUw_EWqi0MHv";
+const supabaseClient = (window.supabase && SUPABASE_URL.startsWith("https://") && !SUPABASE_PUBLISHABLE_KEY.startsWith("PASTE_"))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  : null;
+let currentUser = null;
+
+function openAuth(mode = "login") {
+  if (!supabaseClient) {
+    toast("Add your Supabase URL and publishable key in index.html first.");
+    return;
+  }
+  dlg.innerHTML = `<form method="dialog" id="authForm" style="padding:0">
+    <h2>${mode === "signup" ? "Create account" : "Log in"}</h2>
+    <p class="hint">Email confirmation may be required before your first login.</p>
+    <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required>
+    <label for="authPassword">Password</label><input id="authPassword" type="password" minlength="6" autocomplete="${mode === "signup" ? "new-password" : "current-password"}" required>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" type="submit" id="authSubmit">${mode === "signup" ? "Sign up" : "Log in"}</button>
+      <button class="btn ghost" type="button" id="authSwitch">${mode === "signup" ? "Have an account? Log in" : "New here? Sign up"}</button>
+      <button class="btn ghost" type="button" onclick="dlg.close()">Cancel</button>
+    </div><p id="authMessage" class="hint" aria-live="polite"></p></form>`;
+  dlg.showModal();
+  document.getElementById("authSwitch").onclick = () => openAuth(mode === "signup" ? "login" : "signup");
+  document.getElementById("authForm").onsubmit = async e => {
+    e.preventDefault();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const submit = document.getElementById("authSubmit");
+    const message = document.getElementById("authMessage");
+    submit.disabled = true; message.textContent = "Please wait…";
+    try {
+      const result = mode === "signup"
+        ? await supabaseClient.auth.signUp({ email, password })
+        : await supabaseClient.auth.signInWithPassword({ email, password });
+      if (result.error) throw result.error;
+      if (mode === "signup" && !result.data.session) {
+        message.textContent = "Account created. Check your email to confirm, then log in.";
+      } else {
+        currentUser = result.data.user;
+        updateAuthButton();
+        message.textContent = "Success!";
+        setTimeout(() => { if (dlg.open) dlg.close(); }, 700);
+      }
+    } catch (err) {
+      message.textContent = err.message || "Authentication failed.";
+    } finally {
+      submit.disabled = false;
+    }
+  };
+}
+function updateAuthButton() {
+  const b = document.getElementById("authBtn");
+  if (!b) return;
+  b.textContent = currentUser ? "Log out" : "Log in / Sign up";
+  b.onclick = async () => {
+    if (!currentUser) return openAuth();
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) return toast(error.message);
+    currentUser = null; updateAuthButton(); toast("Logged out.");
+  };
+}
+async function getAccessToken() {
+  if (!supabaseClient) return null;
+  const { data } = await supabaseClient.auth.getSession();
+  return data.session?.access_token || null;
+}
+if (supabaseClient) {
+  supabaseClient.auth.getUser().then(({ data }) => { currentUser = data.user || null; updateAuthButton(); });
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null; updateAuthButton();
+  });
+}
+/* ---------- Existing CampusConnect app ---------- */
+
+/* ---------- Data ---------- */
+const LOCS={'Library':[0,0],'Canteen':[1,0],'Labs':[2,0],'Classrooms':[0,1],'Sports Ground':[1,1],'Parking':[2,1]};
+
+const CATS=['Electronics','Wallet / ID','Keys','Bottle','Books / Notes','Clothing','Other'];
+
+const KEY='campusconnect-v1';
+
+const ago=h=>new Date(Date.now()-h*36e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
+
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
+
+const save=()=>localStorage.setItem(KEY,JSON.stringify(db));
+
+function seed(){
+
+  const d={items:[],claims:[],notes:[],points:{},seq:1};
+
+  const add=(type,title,category,color,loc,h,desc,secret,who)=>d.items.push({id:'i'+d.seq++,type,title,category,color,loc,date:ago(h),desc,secret,img:'',status:'open',who});
+
+  add('lost','Black wireless earbuds','Electronics','black','Library',3,'Realme earbuds in a black case with a small scratch on the lid','Cat sticker inside the lid','Aman');
+
+  add('found','Black earbuds case','Electronics','black','Library',2,'Black earbuds case found on a study table near the windows','Has a cat sticker inside','Riya');
+
+  add('lost','Blue steel water bottle','Bottle','blue','Classrooms',20,'Blue steel bottle with a dent near the bottom','Initials RK on the cap','Aman');
+
+  add('found','Blue water bottle','Bottle','blue','Labs',18,'Blue bottle left on a lab bench','Initials scratched on the cap','Karan');
+
+  add('found','Scientific calculator','Electronics','grey','Labs',30,'Casio scientific calculator, grey cover','Name written inside the cover','Riya');
+
+  add('lost','Brown leather wallet','Wallet / ID','brown','Canteen',6,'Brown wallet with student ID card inside','Photo of a dog behind the ID','Meera');
+
+  add('found','Keys with red keychain','Keys','red','Parking',5,'Three keys on a red keychain shaped like a football','Football keychain says FC','Karan');
+
+  return d;
+
+}
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const fmt=s=>new Date(s).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+
+const byId=id=>db.items.find(i=>i.id===id);
+/* ---------- Smart match: S = 0.35C + 0.25L + 0.20T + 0.20D ---------- */
+function toks(i){return new Set((i.title+' '+i.desc).toLowerCase().match(/[a-z]{3,}/g)||[])}
+
+function score(a,b){
+
+  const C=a.category===b.category?1:0;
+
+  const [x1,y1]=LOCS[a.loc],[x2,y2]=LOCS[b.loc];
+
+  const L=Math.max(0,1-(Math.abs(x1-x2)+Math.abs(y1-y2))/3);
+
+  const hrs=Math.abs(new Date(a.date)-new Date(b.date))/36e5;
+
+  const T=Math.max(0,1-hrs/48);
+
+  const A=toks(a),B=toks(b);let inter=0;A.forEach(t=>B.has(t)&&inter++);
+
+  const jac=inter/Math.max(1,new Set([...A,...B]).size);
+
+  const col=a.color.trim().toLowerCase()===b.color.trim().toLowerCase()?1:0;
+
+  const D=0.5*col+0.5*Math.min(1,jac*3);
+
+  return{S:.35*C+.25*L+.2*T+.2*D,C,L,T,D};
+
+}
+
+function matchesFor(item){
+
+  return db.items.filter(o=>o.type!==item.type&&o.status==='open')
+
+    .map(o=>({item:o,...(item.type==='lost'?score(item,o):score(o,item))}))
+
+    .filter(m=>m.S>=.5).sort((a,b)=>b.S-a.S);
+
+}
+
+const label=s=>s>=.75?'High match':s>=.6?'Good match':'Possible match';
+
+const colour=s=>s>=.75?'#5f9a58':s>=.6?'#d99a2b':'#c95a50';
+/* ---------- Helpers ---------- */
+function go(h){location.hash=h}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2400)}
+
+function note(m,link){db.notes.unshift({m,link,read:false,t:Date.now()});db.notes=db.notes.slice(0,30)}
+
+function opts(arr,sel){return arr.map(a=>`<option ${a===sel?'selected':''}>${esc(a)}</option>`).join('')}
+
+function readImg(file){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,240/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.7))};im.src=fr.result};fr.readAsDataURL(file)})}
+
+function stage(lost){
+
+  if(lost.status==='returned')return 3;
+
+  if(db.claims.some(c=>c.lostId===lost.id&&c.state==='pending'))return 2;
+
+  return matchesFor(lost).length?1:0;
+
+}
+
+function card(i){
+
+  const m=i.status==='open'&&i.type==='lost'?matchesFor(i).length:0;
+
+  return `<article class="tag ${i.type}">
+
+    ${i.img?`<img src="${i.img}" alt="Photo of ${esc(i.title)}">`:''}
+
+    <span class="pill ${i.type}">${i.type==='lost'?'Lost':'Found'}</span><span class="pill st ${i.status==='returned'?'ok':''}">${i.status==='returned'?'Returned':'Open'}</span>
+
+    <h3>${esc(i.title)}</h3>
+
+    <div class="meta">${esc(i.category)} · ${esc(i.color)} · ${esc(i.loc)}<br>${fmt(i.date)}</div>
+
+    <p style="margin:6px 0">${esc(i.desc)}</p>
+
+    <div class="meta">Private details are hidden. Reported by ${esc(i.who)}.</div>
+
+    <div class="row" style="margin-top:8px">
+
+      ${i.type==='lost'&&i.status==='open'?`<button class="btn sm" onclick="go('matches:${i.id}')">See matches (${m})</button>`:''}
+
+      ${i.type==='found'&&i.status==='open'?`<button class="btn sm found" onclick="claimDlg('${i.id}')">This is mine</button>`:''}
+
+    </div></article>`;
+
+}
+/* ---------- Views ---------- */
+const V={};
+
+const SCENE=`<div class="scene"><svg class="anim" viewBox="0 0 700 340" role="img" aria-label="A lost-item pin on the left connects to a found-item pin on the right, with a match score between them">
+
+<rect width="700" height="340" fill="#fde0cd"/>
+
+<circle class="sun" cx="625" cy="52" r="26" fill="#f8c978"/>
+
+<rect y="292" width="700" height="48" fill="#f0cdb4"/>
+
+<rect x="50" y="190" width="150" height="104" rx="8" fill="#f3b99d"/><path d="M42 192 L125 140 L208 192Z" fill="#e59a7e"/>
+
+<rect x="72" y="214" width="22" height="28" rx="3" fill="#fff3e6"/><rect x="114" y="214" width="22" height="28" rx="3" fill="#fff3e6"/><rect x="156" y="214" width="22" height="28" rx="3" fill="#fff3e6"/><rect x="108" y="262" width="34" height="32" rx="4" fill="#c9806a"/>
+
+<text x="125" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#4a2f2a">Library</text>
+
+<rect x="500" y="200" width="150" height="94" rx="8" fill="#f6d9a8"/><path d="M492 202 L575 156 L658 202Z" fill="#e3b565"/>
+
+<rect x="522" y="222" width="22" height="26" rx="3" fill="#fff3e6"/><rect x="606" y="222" width="22" height="26" rx="3" fill="#fff3e6"/><rect x="558" y="256" width="34" height="38" rx="4" fill="#c99a52"/>
+
+<text x="575" y="193" text-anchor="middle" font-size="13" font-weight="700" fill="#4a2f2a">Canteen</text>
+
+<path class="route" d="M130 150 Q350 10 570 150" fill="none" stroke="#c95a50" stroke-width="3" stroke-dasharray="3 10" stroke-linecap="round"/>
+
+<circle class="dot" r="7" fill="#d99a2b"><animateMotion dur="4s" repeatCount="indefinite" path="M130 150 Q350 10 570 150"/></circle>
+
+<g class="float"><path d="M130 150 C116 132 108 122 108 110 A22 22 0 1 1 152 110 C152 122 144 132 130 150Z" fill="#c95a50"/><circle cx="130" cy="110" r="12" fill="#fff3e6"/><text x="130" y="116" text-anchor="middle" font-size="16" font-weight="800" fill="#c95a50">?</text></g>
+
+<g class="float b2"><path d="M570 150 C556 132 548 122 548 110 A22 22 0 1 1 592 110 C592 122 584 132 570 150Z" fill="#d99a2b"/><circle cx="570" cy="110" r="12" fill="#fff3e6"/><text x="570" y="116" text-anchor="middle" font-size="16" font-weight="800" fill="#d99a2b">✓</text></g>
+
+<circle class="ringp" cx="350" cy="80" r="20" fill="none" stroke="#c95a50" stroke-width="3"/>
+
+<rect x="296" y="62" width="108" height="36" rx="18" fill="#4a2f2a"/><text x="350" y="86" text-anchor="middle" fill="#fff8f0" font-size="15" font-weight="700">87% match</text>
+
+<g class="float b3"><rect x="236" y="244" width="16" height="30" rx="5" fill="#8fae8b"/><rect x="240" y="238" width="8" height="8" rx="2" fill="#6f8f6b"/></g>
+
+<g class="float"><rect x="285" y="248" width="30" height="24" rx="10" fill="#4a2f2a"/><circle cx="300" cy="260" r="3" fill="#f0b45a"/></g>
+
+<g class="float b2"><circle cx="372" cy="262" r="8" fill="none" stroke="#d99a2b" stroke-width="4"/><rect x="380" y="260" width="22" height="5" fill="#d99a2b"/></g>
+
+</svg></div>`;
+
+V.home=()=>{
+
+  const n=db.items,ret=n.filter(i=>i.status==='returned').length/2|0;
+
+  const demo=db.items.find(i=>i.type==='lost'&&i.status==='open');
+
+  const m=demo?matchesFor(demo)[0]:null;
+
+  const F=[['🎯','Smart match score','Every report is compared with the opposite kind using category, place, time, colour and description. You see the score and the reasons.'],
+
+    ['🔒','Private ownership check','Owners prove it is theirs with a detail only they know. Finders review the claim. Nothing sensitive is shown publicly.'],
+
+    ['🗺️','Campus map','See where items were lost or found, zone by zone: library, canteen, labs, classrooms, sports ground and parking.'],
+
+    ['🔔','Instant alerts','The moment a likely match is reported, an alert appears in your bell.'],
+
+    ['📱','QR recovery points','A QR code at each place opens a found-item form with the location already chosen.'],
+
+    ['📊','Campus insights','Spot the places and item types that go missing most, so the campus can put help where it matters.']];
+
+  return `<section class="hv"><h1>Lost it?<br>Let the campus find it.</h1>
+
+    <p class="sub">CampusConnect matches lost reports with found reports, shows you why they match, and checks ownership privately before anything is handed back.</p>
+
+    <div class="row c"><button class="btn lost" onclick="go('report:lost')">I lost something</button><button class="btn found" onclick="go('report:found')">I found something</button><button class="btn ghost" onclick="go('browse')">Browse items</button></div></section>
+
+    ${SCENE}
+
+    <section class="hv"><h2>Right now on campus</h2><div class="stats"><div class="stat"><b>${n.filter(i=>i.type==='lost').length}</b>lost reports</div><div class="stat"><b>${n.filter(i=>i.type==='found').length}</b>found reports</div><div class="stat"><b>${ret}</b>returned to owners</div><div class="stat"><b>${Object.keys(LOCS).length}</b>campus locations</div></div></section>
+
+    <section class="hv"><h2>How recovery works</h2><ol class="tl">
+
+      <li data-n="1"><b>Report</b><span class="meta">Post a lost or found item with a photo, place and time.</span></li>
+
+      <li data-n="2"><b>Match</b><span class="meta">We score every opposite report and explain the score.</span></li>
+
+      <li data-n="3"><b>Claim</b><span class="meta">The owner describes a private detail only they would know.</span></li>
+
+      <li data-n="4"><b>Return</b><span class="meta">The finder approves the claim and the case closes.</span></li></ol></section>
+
+    <section class="hv"><h2>See a match happen</h2><p class="sub">This is a live result from the items on this page.</p>
+
+      <div class="demo big">${demo&&m?`<p class="meta" style="margin:0 0 8px">Lost: ${esc(demo.title)} · ${esc(demo.loc)}</p>
+
+      <div class="match" style="grid-template-columns:84px 1fr;margin:0;padding:0;background:none"><div class="ring" data-t="${Math.round(m.S*100)}" style="--p:${Math.round(m.S*100)};--col:${colour(m.S)}"><span>${Math.round(m.S*100)}%</span></div>
+
+      <div><b>${label(m.S)}: ${esc(m.item.title)}</b><div class="meta">Reported near ${esc(m.item.loc)}</div></div></div>
+
+      <p style="margin:12px 0 0"><button class="btn sm" onclick="go('matches:${demo.id}')">See why it matches</button></p>`:'<p class="meta">Report an item to see a match here.</p>'}</div></section>
+
+    <section class="hv"><h2>Built for real campus life</h2>${F.map(f=>`<div class="feat"><em>${f[0]}</em><div><b>${f[1]}</b><span class="meta">${f[2]}</span></div></div>`).join('')}</section>
+
+    <section class="cta"><h2>Lost something today? Found something?</h2><p style="margin:0 0 20px;opacity:.85">It takes a minute to post a report.</p>
+
+      <div class="row c"><button class="btn lost" onclick="go('report:lost')">I lost something</button><button class="btn found" onclick="go('report:found')">I found something</button></div></section>`;
+
+};
+
+V.home.after=()=>{
+
+  const r=document.querySelector('.ring[data-t]');if(!r||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+
+  const t=+r.dataset.t,sp=r.firstElementChild;let s=null;
+
+  const step=ts=>{s=s||ts;const k=Math.min(1,(ts-s)/1200),v=Math.round(t*k);r.style.setProperty('--p',v);sp.textContent=v+'%';if(k<1)requestAnimationFrame(step)};
+
+  requestAnimationFrame(step);
+
+};
+
+
+
+V.report=(arg)=>{
+
+  const a=(arg||'').split(':');const type=a[0]==='found'?'found':'lost',loc=a[1]||'';
+
+  return `<h2>${type==='found'?'Report a found item':'Report a lost item'}</h2><form id="f" data-type="${type}">
+
+    <p class="hint" style="margin:0"><a href="#report:${type==='found'?'lost':'found'}">${type==='found'?'Lost something instead?':'Found something instead?'}</a></p>
+
+    <div class="two"><div><label for="title">Item name</label><input id="title" required placeholder="e.g. Black wireless earbuds"></div>
+
+    <div><label for="cat">Category</label><select id="cat">${opts(CATS)}</select></div>
+
+    <div><label for="color">Main colour</label><input id="color" required placeholder="black"></div>
+
+    <div><label for="loc">Where? (last seen or found)</label><select id="loc">${opts(Object.keys(LOCS),loc)}</select></div>
+
+    <div><label for="date">When?</label><input id="date" type="datetime-local" required value="${ago(0)}"></div>
+
+    <div><label for="who">Your name</label><input id="who" required placeholder="Your name"></div></div>
+
+    <label for="desc">Description</label><textarea id="desc" rows="3" required placeholder="Brand, marks, stickers, condition"></textarea>
+
+    <label for="secret" id="slabel">Private detail</label><input id="secret" placeholder="Something only the owner would know">
+
+    <div class="hint">This stays hidden. It is only shown to the finder when reviewing a claim. Never enter ID numbers or phone numbers.</div>
+
+    <label for="img">Photo (optional)</label><input id="img" type="file" accept="image/*">
+
+    <p><button class="btn" type="submit">Post report</button></p></form>`;
+
+};
+
+V.report.after=()=>{
+
+  const f=document.getElementById('f');
+
+  document.getElementById('slabel').textContent=f.dataset.type==='found'?'Private detail (used to verify the owner)':'Private detail (optional, helps you prove it is yours)';
+
+  // Prevent double-clicks and reuse a key when retrying an unchanged form.
+  let pendingRequestId = null;
+  const submitButton = f.querySelector('button[type="submit"]');
+  f.addEventListener('input', () => { pendingRequestId = null; });
+  f.addEventListener('change', () => { pendingRequestId = null; });
+  f.onsubmit=async e=>{
+    e.preventDefault();
+    if (submitButton.disabled) return;
+    submitButton.disabled = true;
+    submitButton.dataset.originalText = submitButton.dataset.originalText || submitButton.textContent;
+    submitButton.textContent = 'Posting…';
+    const g=id=>document.getElementById(id).value.trim();
+    try {
+      const file=document.getElementById('img').files[0];
+      const it={id:'i'+db.seq++,type:f.dataset.type,title:g('title'),category:g('cat'),color:g('color'),loc:g('loc'),date:g('date'),desc:g('desc'),secret:g('secret'),img:file?await readImg(file):'',status:'open',who:g('who')};
+      if (!pendingRequestId) pendingRequestId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'req-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      it.request_id = pendingRequestId;
+      const accessToken = await getAccessToken();
+      if (!accessToken) throw new Error('Please log in before posting a report.');
+      const response = await fetch('http://localhost:3000/api/items', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${accessToken}`}, body:JSON.stringify(it) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Could not save report');
+      if (!result.item) throw new Error('Backend response did not include the saved report');
+      it.id = result.item.id;
+      it.desc = result.item.desc ?? it.desc;
+      if (!db.items.some(item => String(item.id) === String(it.id))) db.items.unshift(it);
+      pendingRequestId = null;
+      const ms=matchesFor(it).filter(m=>m.S>=.6);
+      ms.forEach(m=>note(`Possible match for “${it.title}”: ${m.item.title} (${Math.round(m.S*100)}%)`,'matches:'+(it.type==='lost'?it.id:m.item.id)));
+      save();refreshBell();toast('Report posted');
+      go(it.type==='lost'?'matches:'+it.id:'browse');
+    } catch (error) {
+      console.error('Backend error:', error);
+      toast(error.message || 'Backend save failed. Please try again.');
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = submitButton.dataset.originalText || 'Post report';
+    }
+  };
+
+};
+
+
+
+V.browse=(arg)=>{
+
+  window._f=window._f||{q:'',t:'',c:'',l:''};if(arg&&LOCS[arg])window._f.l=arg;
+
+  return `<h2>Browse items</h2><div class="panel row" style="margin-bottom:14px">
+
+    <input id="q" placeholder="Search by name or description" value="${esc(_f.q)}" style="flex:2;min-width:180px">
+
+    <select id="ft" style="flex:1"><option value="">Lost and found</option><option value="lost" ${_f.t==='lost'?'selected':''}>Lost</option><option value="found" ${_f.t==='found'?'selected':''}>Found</option></select>
+
+    <select id="fc" style="flex:1"><option value="">All categories</option>${opts(CATS,_f.c)}</select>
+
+    <select id="fl" style="flex:1"><option value="">All locations</option>${opts(Object.keys(LOCS),_f.l)}</select></div><div id="list" class="grid"></div>`;
+
+};
+
+V.browse.after=()=>{
+
+  const draw=()=>{
+    _f.q=q.value;_f.t=ft.value;_f.c=fc.value;_f.l=fl.value;
+
+    const r=db.items.filter(i=>(!_f.t||i.type===_f.t)&&(!_f.c||i.category===_f.c)&&(!_f.l||i.loc===_f.l)&&(!_f.q||(i.title+' '+i.desc+' '+i.color).toLowerCase().includes(_f.q.toLowerCase())));
+
+    list.innerHTML=r.length?r.map(card).join(''):'<div class="empty" style="grid-column:1/-1">No items match these filters. Clear a filter or report the item.</div>';
+  };
+
+  [q,ft,fc,fl].forEach(e=>e.oninput=draw);
+  draw();
+
+  // Load reports saved by the backend and merge them into the existing UI data.
+  fetch('http://localhost:3000/api/items')
+    .then(response=>{
+      if(!response.ok) throw new Error('Could not load backend reports');
+      return response.json();
+    })
+    .then(serverItems=>{
+      const existingIds=new Set(db.items.map(item=>String(item.id)));
+      const normalized=serverItems.map(item=>({
+        id:String(item.id),
+        type:item.type,
+        title:item.title||item.name||'Untitled report',
+        category:item.category||'Other',
+        color:item.color||'',
+        loc:item.loc||item.location||'',
+        date:item.date||'',
+        desc:item.desc||'',
+        secret:item.secret||'',
+        img:item.img||'',
+        status:item.status||'open',
+        who:item.who||'Student'
+      }));
+      const fresh=normalized.filter(item=>!existingIds.has(String(item.id)));
+      if(fresh.length){
+        db.items.push(...fresh);
+        save();
+      }
+      draw();
+    })
+    .catch(error=>{
+      console.error('Could not load reports from backend:',error);
+      toast('Could not load server reports. Check that backend is running.');
+    });
+
+};
+
+
+
+V.matches=(arg)=>{
+
+  const lost=db.items.filter(i=>i.type==='lost'&&i.status==='open');
+
+  if(!lost.length)return `<h2>Smart matches</h2><div class="empty">No open lost reports. <a href="#report:lost">Report a lost item</a> to see matches.</div>`;
+
+  const cur=byId(arg)||lost[0];
+
+  const ms=matchesFor(cur);
+
+  return `<h2>Smart matches</h2><div class="panel" style="margin-bottom:14px"><label for="pick" style="margin-top:0">Showing matches for your lost item</label>
+
+    <select id="pick" onchange="go('matches:'+this.value)">${lost.map(i=>`<option value="${i.id}" ${i.id===cur.id?'selected':''}>${esc(i.title)} (${esc(i.loc)})</option>`).join('')}</select>
+
+    <div class="hint">Score = 0.35 category + 0.25 location + 0.20 time + 0.20 description and colour. This is a rule-based score, not an AI prediction.</div></div>
+
+    ${ms.length?ms.map(m=>`<div class="match"><div class="ring" style="--p:${Math.round(m.S*100)};--col:${colour(m.S)}"><span>${Math.round(m.S*100)}%</span></div>
+
+      <div><b>${label(m.S)}: ${esc(m.item.title)}</b><div class="meta">${esc(m.item.loc)} · ${fmt(m.item.date)}</div>
+
+      <div class="bars" style="margin-top:6px">${[['Category',m.C],['Location',m.L],['Time',m.T],['Description',m.D]].map(([n,v])=>`<div><span>${n}</span><i style="--w:${Math.round(v*100)}%"></i><span>${Math.round(v*100)}%</span></div>`).join('')}</div></div>
+
+      <button class="btn found" onclick="claimDlg('${m.item.id}','${cur.id}')">Claim this</button></div>`).join(''):'<div class="empty">No likely matches yet. You will get an alert when a similar item is reported.</div>'}`;
+
+};
+
+
+
+V.map=()=>{
+
+  const z=Object.keys(LOCS);
+
+  const cell=n=>{const l=db.items.filter(i=>i.loc===n&&i.status==='open');return `<button class="zone" onclick="go('browse:${n}')"><b>${n}</b><span class="pill lost">${l.filter(i=>i.type==='lost').length} lost</span><span class="pill found">${l.filter(i=>i.type==='found').length} found</span></button>`};
+
+  const order=['Library','Canteen','Labs','Classrooms','Sports Ground','Parking'];
+
+  return `<h2>Campus map</h2><p class="sub">Tap a zone to see items lost or found there.</p><div class="map">${order.map(cell).join('')}</div>
+
+    <h2 style="margin-top:26px">QR recovery points</h2><p class="sub">Print a QR code for each link below and stick it at that place. Scanning it opens a found-item form with the location already chosen.</p>
+
+    <div class="panel">${z.map(n=>`<div class="row" style="margin:4px 0"><b style="width:130px">${n}</b><a href="#report:found:${encodeURIComponent(n)}">#report:found:${n}</a></div>`).join('')}</div>`;
+
+};
+
+
+
+V.claims=()=>{
+
+  const lost=db.items.filter(i=>i.type==='lost');
+
+  const steps=['Lost','Potential match','Claim under review','Returned'];
+
+  const pend=db.claims.filter(c=>c.state==='pending');
+
+  const pts=db.points,top=Object.entries(pts).sort((a,b)=>b[1]-a[1]);
+
+  const badge=p=>p>=30?'Lost Item Hero':p>=10?'Campus Helper':'';
+
+  return `<h2>Recovery status</h2>${lost.map(i=>{const s=stage(i);return `<div class="panel" style="margin-bottom:10px"><b>${esc(i.title)}</b> <span class="meta">· ${esc(i.who)} · ${esc(i.loc)}</span>
+
+    <div class="trk">${steps.map((t,k)=>`<span class="${k<=s?'done':''}">${t}</span>`).join('')}</div></div>`}).join('')||'<div class="empty">No lost reports yet.</div>'}
+
+    <h2 style="margin-top:26px">Finder review</h2><p class="sub">Finders see the claimant’s answer next to the private detail they saved. Approve only if they agree.</p>
+
+    ${pend.length?pend.map(c=>{const f=byId(c.foundId);return `<div class="panel" style="margin-bottom:10px"><b>${esc(f.title)}</b> <span class="meta">found by ${esc(f.who)}</span>
+
+      <div class="secret"><b>Saved private detail:</b> ${esc(f.secret||'(none saved)')}</div>
+
+      <div class="secret" style="background:#eef5e9;border-color:#8fae8b"><b>${esc(c.name)} says:</b> ${esc(c.answer)}</div>
+
+      <div class="row"><button class="btn found sm" onclick="decide('${c.id}',true)">Approve and return</button><button class="btn ghost sm" onclick="decide('${c.id}',false)">Reject</button></div></div>`}).join(''):'<div class="empty">No claims waiting for review.</div>'}
+
+    <h2 style="margin-top:26px">Campus helpers</h2><div class="panel">${top.length?top.map(([n,p])=>`<div class="row" style="justify-content:space-between"><span>${esc(n)} ${badge(p)?`<span class="pill">${badge(p)}</span>`:''}</span><b>${p} pts</b></div>`).join(''):'<span class="meta">Points are given only after a verified return (10 per return).</span>'}</div>`;
+
+};
+
+
+
+V.insights=()=>{
+
+  const cnt=(arr,key)=>{const m={};arr.forEach(i=>m[i[key]]=(m[i[key]]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+
+  const bars=(rows)=>{const mx=Math.max(1,...rows.map(r=>r[1]));return rows.map(([n,v])=>`<div class="bar-row"><span>${esc(n)}</span><i style="width:${v/mx*100}%"></i><b>${v}</b></div>`).join('')};
+
+  const tot=db.items.length,ret=db.items.filter(i=>i.status==='returned').length;
+
+  return `<h2>Campus insights</h2><div class="stats"><div class="stat"><b>${tot}</b>total reports</div><div class="stat"><b>${ret}</b>items returned</div><div class="stat"><b>${tot?Math.round(ret/tot*100):0}%</b>of reports resolved</div></div>
+
+    <div class="two"><div class="panel"><b>Reports by location</b>${bars(cnt(db.items,'loc'))}<p class="hint">Put a lost-and-found desk or sign at the top location.</p></div>
+
+    <div class="panel"><b>Reports by category</b>${bars(cnt(db.items,'category'))}</div></div>
+
+    <p style="margin-top:20px"><button class="btn ghost sm" onclick="if(confirm('Reset all data to the demo data?')){localStorage.removeItem(KEY);location.reload()}">Reset demo data</button></p>`;
+
+};
+/* ---------- Claims ---------- */
+function claimDlg(foundId,lostId){
+
+  const f=byId(foundId);
+
+  const mine=db.items.filter(i=>i.type==='lost'&&i.status==='open');
+
+  dlg.innerHTML=`<form method="dialog" id="cf" style="padding:0"><h2>Claim: ${esc(f.title)}</h2>
+
+    <label for="cn" style="margin-top:0">Your name</label><input id="cn" required>
+
+    <label for="cl">Which lost report is this?</label><select id="cl"><option value="">Not listed</option>${mine.map(i=>`<option value="${i.id}" ${i.id===lostId?'selected':''}>${esc(i.title)}</option>`).join('')}</select>
+
+    <label for="ca">Describe a detail only the owner would know</label><textarea id="ca" rows="3" required placeholder="Stickers, scratches, contents, engravings"></textarea>
+
+    <div class="row" style="margin-top:14px"><button class="btn found" type="submit">Send claim</button><button class="btn ghost" type="button" onclick="dlg.close()">Cancel</button></div></form>`;
+
+  dlg.showModal();
+
+  document.getElementById('cf').onsubmit=e=>{
+
+    db.claims.push({id:'c'+db.seq++,foundId,lostId:cl.value,name:cn.value.trim(),answer:ca.value.trim(),state:'pending'});
+
+    note(`New claim on “${f.title}” is waiting for review`,'claims');save();refreshBell();dlg.close();toast('Claim sent for review');go('claims');
+
+  };
+
+}
+
+function decide(id,ok){
+
+  const c=db.claims.find(x=>x.id===id),f=byId(c.foundId);
+
+  c.state=ok?'approved':'rejected';
+
+  if(ok){f.status='returned';const l=byId(c.lostId);if(l)l.status='returned';
+
+    db.points[f.who]=(db.points[f.who]||0)+10;
+
+    db.claims.filter(x=>x.foundId===f.id&&x.state==='pending').forEach(x=>x.state='rejected');
+
+    note(`“${f.title}” was returned. ${f.who} earned 10 points`,'claims');toast('Returned. Case closed');
+
+  }else toast('Claim rejected');
+
+  save();refreshBell();render();
+
+}
+/* ---------- Shell ---------- */
+const NAV=[['home','Home'],['report','Report'],['browse','Browse'],['matches','Matches'],['map','Map'],['claims','Status'],['insights','Insights']];
+
+function refreshBell(){const n=db.notes.filter(x=>!x.read).length;cnt.textContent=n||'';cnt.style.display=n?'':'none';
+
+  notes.innerHTML=db.notes.length?db.notes.map((x,i)=>`<p data-i="${i}" style="${x.read?'opacity:.55':''}">${esc(x.m)}</p>`).join(''):'<p>No alerts yet.</p>';
+
+  notes.querySelectorAll('p[data-i]').forEach(p=>p.onclick=()=>{const x=db.notes[p.dataset.i];x.read=true;save();notes.classList.remove('open');refreshBell();go(x.link)})}
+
+bell.onclick=()=>notes.classList.toggle('open');
+
+function render(){
+
+  const [v,...rest]=(location.hash.slice(1)||'home').split(':');
+
+  const view=V[v]?v:'home',arg=decodeURIComponent(rest.join(':'));
+
+  document.body.classList.toggle('home',view==='home');
+
+  nav.innerHTML=NAV.map(([k,t])=>`<button class="${k===view?'on':''}" onclick="go('${k}')">${t}</button>`).join('');
+
+  app.innerHTML=V[view](arg);if(V[view].after)V[view].after();window.scrollTo(0,0);
+
+}
+
+window.onhashchange=render;
+
+updateAuthButton();refreshBell();render();save();
+
+</script>
+
+</body>
+
+</html>
