@@ -647,7 +647,7 @@ V.report.after=()=>{
       it.request_id = pendingRequestId;
       const accessToken = await getAccessToken();
       if (!accessToken) throw new Error('Please log in before posting a report.');
-      const response = await fetch('http://localhost:3000/api/items', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${accessToken}`}, body:JSON.stringify(it) });
+      const response = await fetch('https://campus-connect-kappa-azure-34.vercel.app/api/items', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${accessToken}`}, body:JSON.stringify(it) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Could not save report');
       if (!result.item) throw new Error('Backend response did not include the saved report');
@@ -702,7 +702,7 @@ V.browse.after=()=>{
   draw();
 
   // Load reports saved by the backend and merge them into the existing UI data.
-  fetch('http://localhost:3000/api/items')
+  fetch('https://campus-connect-kappa-azure-34.vercel.app/api/items')
     .then(response=>{
       if(!response.ok) throw new Error('Could not load backend reports');
       return response.json();
